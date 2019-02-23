@@ -1,66 +1,67 @@
 #!/usr/bin/python3.5
 # -*- coding: utf-8 -*-  
- 
+
 import sys
 import os
 import time
 import random
- 
+
 import numpy as np
 import tensorflow as tf
- 
+
 from PIL import Image
- 
- 
+
 SIZE = 1280
 WIDTH = 32
 HEIGHT = 40
 NUM_CLASSES = 34
 iterations = 1000
- 
+
 SAVER_DIR = "train-saver/digits/"
- 
-LETTERS_DIGITS = ("0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X","Y","Z")
+
+LETTERS_DIGITS = (
+"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P",
+"Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
 license_num = ""
- 
+
 time_begin = time.time()
- 
- 
-# ¶¨ÒåÊäÈë½Úµã£¬¶ÔÓ¦ÓÚÍ¼Æ¬ÏñËØÖµ¾ØÕó¼¯ºÏºÍÍ¼Æ¬±êÇ©(¼´Ëù´ú±íµÄÊı×Ö)
+
+# å®šä¹‰è¾“å…¥èŠ‚ç‚¹ï¼Œå¯¹åº”äºå›¾ç‰‡åƒç´ å€¼çŸ©é˜µé›†åˆå’Œå›¾ç‰‡æ ‡ç­¾(å³æ‰€ä»£è¡¨çš„æ•°å­—)
 x = tf.placeholder(tf.float32, shape=[None, SIZE])
 y_ = tf.placeholder(tf.float32, shape=[None, NUM_CLASSES])
- 
+
 x_image = tf.reshape(x, [-1, WIDTH, HEIGHT, 1])
- 
- 
-# ¶¨Òå¾í»ıº¯Êı
+
+
+# å®šä¹‰å·ç§¯å‡½æ•°
 def conv_layer(inputs, W, b, conv_strides, kernel_size, pool_strides, padding):
     L1_conv = tf.nn.conv2d(inputs, W, strides=conv_strides, padding=padding)
     L1_relu = tf.nn.relu(L1_conv + b)
     return tf.nn.max_pool(L1_relu, ksize=kernel_size, strides=pool_strides, padding='SAME')
- 
-# ¶¨ÒåÈ«Á¬½Ó²ãº¯Êı
+
+
+# å®šä¹‰å…¨è¿æ¥å±‚å‡½æ•°
 def full_connect(inputs, W, b):
     return tf.nn.relu(tf.matmul(inputs, W) + b)
- 
- 
-if __name__ =='__main__' and sys.argv[1]=='train':
-    # µÚÒ»´Î±éÀúÍ¼Æ¬Ä¿Â¼ÊÇÎªÁË»ñÈ¡Í¼Æ¬×ÜÊı
+
+
+if __name__ == '__main__' and sys.argv[1] == 'train':
+    # ç¬¬ä¸€æ¬¡éå†å›¾ç‰‡ç›®å½•æ˜¯ä¸ºäº†è·å–å›¾ç‰‡æ€»æ•°
     input_count = 0
-    for i in range(0,NUM_CLASSES):
-        dir = './train_images/training-set/%s/' % i           # ÕâÀï¿ÉÒÔ¸Ä³ÉÄã×Ô¼ºµÄÍ¼Æ¬Ä¿Â¼£¬iÎª·ÖÀà±êÇ©
+    for i in range(0, NUM_CLASSES):
+        dir = './train_images/training-set/%s/' % i  # è¿™é‡Œå¯ä»¥æ”¹æˆä½ è‡ªå·±çš„å›¾ç‰‡ç›®å½•ï¼Œiä¸ºåˆ†ç±»æ ‡ç­¾
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 input_count += 1
- 
-    # ¶¨Òå¶ÔÓ¦Î¬ÊıºÍ¸÷Î¬³¤¶ÈµÄÊı×é
-    input_images = np.array([[0]*SIZE for i in range(input_count)])
-    input_labels = np.array([[0]*NUM_CLASSES for i in range(input_count)])
- 
-    # µÚ¶ş´Î±éÀúÍ¼Æ¬Ä¿Â¼ÊÇÎªÁËÉú³ÉÍ¼Æ¬Êı¾İºÍ±êÇ©
+
+    # å®šä¹‰å¯¹åº”ç»´æ•°å’Œå„ç»´é•¿åº¦çš„æ•°ç»„
+    input_images = np.array([[0] * SIZE for i in range(input_count)])
+    input_labels = np.array([[0] * NUM_CLASSES for i in range(input_count)])
+
+    # ç¬¬äºŒæ¬¡éå†å›¾ç‰‡ç›®å½•æ˜¯ä¸ºäº†ç”Ÿæˆå›¾ç‰‡æ•°æ®å’Œæ ‡ç­¾
     index = 0
-    for i in range(0,NUM_CLASSES):
-        dir = './train_images/training-set/%s/' % i          # ÕâÀï¿ÉÒÔ¸Ä³ÉÄã×Ô¼ºµÄÍ¼Æ¬Ä¿Â¼£¬iÎª·ÖÀà±êÇ©
+    for i in range(0, NUM_CLASSES):
+        dir = './train_images/training-set/%s/' % i  # è¿™é‡Œå¯ä»¥æ”¹æˆä½ è‡ªå·±çš„å›¾ç‰‡ç›®å½•ï¼Œiä¸ºåˆ†ç±»æ ‡ç­¾
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 filename = dir + filename
@@ -69,30 +70,30 @@ if __name__ =='__main__' and sys.argv[1]=='train':
                 height = img.size[1]
                 for h in range(0, height):
                     for w in range(0, width):
-                        # Í¨¹ıÕâÑùµÄ´¦Àí£¬Ê¹Êı×ÖµÄÏßÌõ±äÏ¸£¬ÓĞÀûÓÚÌá¸ßÊ¶±ğ×¼È·ÂÊ
+                        # é€šè¿‡è¿™æ ·çš„å¤„ç†ï¼Œä½¿æ•°å­—çš„çº¿æ¡å˜ç»†ï¼Œæœ‰åˆ©äºæé«˜è¯†åˆ«å‡†ç¡®ç‡
                         if img.getpixel((w, h)) > 230:
-                            input_images[index][w+h*width] = 0
+                            input_images[index][w + h * width] = 0
                         else:
-                            input_images[index][w+h*width] = 1
+                            input_images[index][w + h * width] = 1
                 input_labels[index][i] = 1
                 index += 1
- 
-    # µÚÒ»´Î±éÀúÍ¼Æ¬Ä¿Â¼ÊÇÎªÁË»ñÈ¡Í¼Æ¬×ÜÊı
+
+    # ç¬¬ä¸€æ¬¡éå†å›¾ç‰‡ç›®å½•æ˜¯ä¸ºäº†è·å–å›¾ç‰‡æ€»æ•°
     val_count = 0
-    for i in range(0,NUM_CLASSES):
-        dir = './train_images/validation-set/%s/' % i           # ÕâÀï¿ÉÒÔ¸Ä³ÉÄã×Ô¼ºµÄÍ¼Æ¬Ä¿Â¼£¬iÎª·ÖÀà±êÇ©
+    for i in range(0, NUM_CLASSES):
+        dir = './train_images/validation-set/%s/' % i  # è¿™é‡Œå¯ä»¥æ”¹æˆä½ è‡ªå·±çš„å›¾ç‰‡ç›®å½•ï¼Œiä¸ºåˆ†ç±»æ ‡ç­¾
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 val_count += 1
- 
-    # ¶¨Òå¶ÔÓ¦Î¬ÊıºÍ¸÷Î¬³¤¶ÈµÄÊı×é
-    val_images = np.array([[0]*SIZE for i in range(val_count)])
-    val_labels = np.array([[0]*NUM_CLASSES for i in range(val_count)])
- 
-    # µÚ¶ş´Î±éÀúÍ¼Æ¬Ä¿Â¼ÊÇÎªÁËÉú³ÉÍ¼Æ¬Êı¾İºÍ±êÇ©
+
+    # å®šä¹‰å¯¹åº”ç»´æ•°å’Œå„ç»´é•¿åº¦çš„æ•°ç»„
+    val_images = np.array([[0] * SIZE for i in range(val_count)])
+    val_labels = np.array([[0] * NUM_CLASSES for i in range(val_count)])
+
+    # ç¬¬äºŒæ¬¡éå†å›¾ç‰‡ç›®å½•æ˜¯ä¸ºäº†ç”Ÿæˆå›¾ç‰‡æ•°æ®å’Œæ ‡ç­¾
     index = 0
-    for i in range(0,NUM_CLASSES):
-        dir = './train_images/validation-set/%s/' % i          # ÕâÀï¿ÉÒÔ¸Ä³ÉÄã×Ô¼ºµÄÍ¼Æ¬Ä¿Â¼£¬iÎª·ÖÀà±êÇ©
+    for i in range(0, NUM_CLASSES):
+        dir = './train_images/validation-set/%s/' % i  # è¿™é‡Œå¯ä»¥æ”¹æˆä½ è‡ªå·±çš„å›¾ç‰‡ç›®å½•ï¼Œiä¸ºåˆ†ç±»æ ‡ç­¾
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 filename = dir + filename
@@ -101,163 +102,157 @@ if __name__ =='__main__' and sys.argv[1]=='train':
                 height = img.size[1]
                 for h in range(0, height):
                     for w in range(0, width):
-                        # Í¨¹ıÕâÑùµÄ´¦Àí£¬Ê¹Êı×ÖµÄÏßÌõ±äÏ¸£¬ÓĞÀûÓÚÌá¸ßÊ¶±ğ×¼È·ÂÊ
+                        # é€šè¿‡è¿™æ ·çš„å¤„ç†ï¼Œä½¿æ•°å­—çš„çº¿æ¡å˜ç»†ï¼Œæœ‰åˆ©äºæé«˜è¯†åˆ«å‡†ç¡®ç‡
                         if img.getpixel((w, h)) > 230:
-                            val_images[index][w+h*width] = 0
+                            val_images[index][w + h * width] = 0
                         else:
-                            val_images[index][w+h*width] = 1
+                            val_images[index][w + h * width] = 1
                 val_labels[index][i] = 1
                 index += 1
-    
+
     with tf.Session() as sess:
-        # µÚÒ»¸ö¾í»ı²ã
+        # ç¬¬ä¸€ä¸ªå·ç§¯å±‚
         W_conv1 = tf.Variable(tf.truncated_normal([8, 8, 1, 16], stddev=0.1), name="W_conv1")
         b_conv1 = tf.Variable(tf.constant(0.1, shape=[16]), name="b_conv1")
         conv_strides = [1, 1, 1, 1]
         kernel_size = [1, 2, 2, 1]
         pool_strides = [1, 2, 2, 1]
         L1_pool = conv_layer(x_image, W_conv1, b_conv1, conv_strides, kernel_size, pool_strides, padding='SAME')
- 
-        # µÚ¶ş¸ö¾í»ı²ã
+
+        # ç¬¬äºŒä¸ªå·ç§¯å±‚
         W_conv2 = tf.Variable(tf.truncated_normal([5, 5, 16, 32], stddev=0.1), name="W_conv2")
         b_conv2 = tf.Variable(tf.constant(0.1, shape=[32]), name="b_conv2")
         conv_strides = [1, 1, 1, 1]
         kernel_size = [1, 1, 1, 1]
         pool_strides = [1, 1, 1, 1]
         L2_pool = conv_layer(L1_pool, W_conv2, b_conv2, conv_strides, kernel_size, pool_strides, padding='SAME')
- 
- 
-        # È«Á¬½Ó²ã
+
+        # å…¨è¿æ¥å±‚
         W_fc1 = tf.Variable(tf.truncated_normal([16 * 20 * 32, 512], stddev=0.1), name="W_fc1")
         b_fc1 = tf.Variable(tf.constant(0.1, shape=[512]), name="b_fc1")
-        h_pool2_flat = tf.reshape(L2_pool, [-1, 16 * 20*32])
+        h_pool2_flat = tf.reshape(L2_pool, [-1, 16 * 20 * 32])
         h_fc1 = full_connect(h_pool2_flat, W_fc1, b_fc1)
- 
- 
+
         # dropout
         keep_prob = tf.placeholder(tf.float32)
- 
+
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
- 
- 
-        # readout²ã
+
+        # readoutå±‚
         W_fc2 = tf.Variable(tf.truncated_normal([512, NUM_CLASSES], stddev=0.1), name="W_fc2")
         b_fc2 = tf.Variable(tf.constant(0.1, shape=[NUM_CLASSES]), name="b_fc2")
- 
-        # ¶¨ÒåÓÅ»¯Æ÷ºÍÑµÁ·op
+
+        # å®šä¹‰ä¼˜åŒ–å™¨å’Œè®­ç»ƒop
         y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
         cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
         train_step = tf.train.AdamOptimizer((1e-4)).minimize(cross_entropy)
- 
+
         correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
- 
+
         sess.run(tf.global_variables_initializer())
- 
+
         time_elapsed = time.time() - time_begin
-        print("¶ÁÈ¡Í¼Æ¬ÎÄ¼şºÄ·ÑÊ±¼ä£º%dÃë" % time_elapsed)
+        print("è¯»å–å›¾ç‰‡æ–‡ä»¶è€—è´¹æ—¶é—´ï¼š%dç§’" % time_elapsed)
         time_begin = time.time()
- 
-        print ("Ò»¹²¶ÁÈ¡ÁË %s ¸öÑµÁ·Í¼Ïñ£¬ %s ¸ö±êÇ©" % (input_count, input_count))
- 
-        # ÉèÖÃÃ¿´ÎÑµÁ·opµÄÊäÈë¸öÊıºÍµü´ú´ÎÊı£¬ÕâÀïÎªÁËÖ§³ÖÈÎÒâÍ¼Æ¬×ÜÊı£¬¶¨ÒåÁËÒ»¸öÓàÊıremainder£¬Æ©Èç£¬Èç¹ûÃ¿´ÎÑµÁ·opµÄÊäÈë¸öÊıÎª60£¬Í¼Æ¬×ÜÊıÎª150ÕÅ£¬ÔòÇ°ÃæÁ½´Î¸÷ÊäÈë60ÕÅ£¬×îºóÒ»´ÎÊäÈë30ÕÅ£¨ÓàÊı30£©
+
+        print("ä¸€å…±è¯»å–äº† %s ä¸ªè®­ç»ƒå›¾åƒï¼Œ %s ä¸ªæ ‡ç­¾" % (input_count, input_count))
+
+        # è®¾ç½®æ¯æ¬¡è®­ç»ƒopçš„è¾“å…¥ä¸ªæ•°å’Œè¿­ä»£æ¬¡æ•°ï¼Œè¿™é‡Œä¸ºäº†æ”¯æŒä»»æ„å›¾ç‰‡æ€»æ•°ï¼Œå®šä¹‰äº†ä¸€ä¸ªä½™æ•°remainderï¼Œè­¬å¦‚ï¼Œå¦‚æœæ¯æ¬¡è®­ç»ƒopçš„è¾“å…¥ä¸ªæ•°ä¸º60ï¼Œå›¾ç‰‡æ€»æ•°ä¸º150å¼ ï¼Œåˆ™å‰é¢ä¸¤æ¬¡å„è¾“å…¥60å¼ ï¼Œæœ€åä¸€æ¬¡è¾“å…¥30å¼ ï¼ˆä½™æ•°30ï¼‰
         batch_size = 60
         iterations = iterations
         batches_count = int(input_count / batch_size)
         remainder = input_count % batch_size
-        print ("ÑµÁ·Êı¾İ¼¯·Ö³É %s Åú, Ç°ÃæÃ¿Åú %s ¸öÊı¾İ£¬×îºóÒ»Åú %s ¸öÊı¾İ" % (batches_count+1, batch_size, remainder))
- 
-        # Ö´ĞĞÑµÁ·µü´ú
+        print("è®­ç»ƒæ•°æ®é›†åˆ†æˆ %s æ‰¹, å‰é¢æ¯æ‰¹ %s ä¸ªæ•°æ®ï¼Œæœ€åä¸€æ‰¹ %s ä¸ªæ•°æ®" % (batches_count + 1, batch_size, remainder))
+
+        # æ‰§è¡Œè®­ç»ƒè¿­ä»£
         for it in range(iterations):
-            # ÕâÀïµÄ¹Ø¼üÊÇÒª°ÑÊäÈëÊı×é×ªÎªnp.array
+            # è¿™é‡Œçš„å…³é”®æ˜¯è¦æŠŠè¾“å…¥æ•°ç»„è½¬ä¸ºnp.array
             for n in range(batches_count):
-                train_step.run(feed_dict={x: input_images[n*batch_size:(n+1)*batch_size], y_: input_labels[n*batch_size:(n+1)*batch_size], keep_prob: 0.5})
+                train_step.run(feed_dict={x: input_images[n * batch_size:(n + 1) * batch_size],
+                                          y_: input_labels[n * batch_size:(n + 1) * batch_size], keep_prob: 0.5})
             if remainder > 0:
                 start_index = batches_count * batch_size;
-                train_step.run(feed_dict={x: input_images[start_index:input_count-1], y_: input_labels[start_index:input_count-1], keep_prob: 0.5})
- 
-            # Ã¿Íê³ÉÎå´Îµü´ú£¬ÅĞ¶Ï×¼È·¶ÈÊÇ·ñÒÑ´ïµ½100%£¬´ïµ½ÔòÍË³öµü´úÑ­»·
+                train_step.run(feed_dict={x: input_images[start_index:input_count - 1],
+                                          y_: input_labels[start_index:input_count - 1], keep_prob: 0.5})
+
+            # æ¯å®Œæˆäº”æ¬¡è¿­ä»£ï¼Œåˆ¤æ–­å‡†ç¡®åº¦æ˜¯å¦å·²è¾¾åˆ°100%ï¼Œè¾¾åˆ°åˆ™é€€å‡ºè¿­ä»£å¾ªç¯
             iterate_accuracy = 0
-            if it%5 == 0:
+            if it % 5 == 0:
                 iterate_accuracy = accuracy.eval(feed_dict={x: val_images, y_: val_labels, keep_prob: 1.0})
-                print ('µÚ %d ´ÎÑµÁ·µü´ú: ×¼È·ÂÊ %0.5f%%' % (it, iterate_accuracy*100))
+                print('ç¬¬ %d æ¬¡è®­ç»ƒè¿­ä»£: å‡†ç¡®ç‡ %0.5f%%' % (it, iterate_accuracy * 100))
                 if iterate_accuracy >= 0.9999 and it >= iterations:
                     break;
- 
-        print ('Íê³ÉÑµÁ·!')
+
+        print('å®Œæˆè®­ç»ƒ!')
         time_elapsed = time.time() - time_begin
-        print ("ÑµÁ·ºÄ·ÑÊ±¼ä£º%dÃë" % time_elapsed)
+        print("è®­ç»ƒè€—è´¹æ—¶é—´ï¼š%dç§’" % time_elapsed)
         time_begin = time.time()
- 
-        # ±£´æÑµÁ·½á¹û
+
+        # ä¿å­˜è®­ç»ƒç»“æœ
         if not os.path.exists(SAVER_DIR):
-            print ('²»´æÔÚÑµÁ·Êı¾İ±£´æÄ¿Â¼£¬ÏÖÔÚ´´½¨±£´æÄ¿Â¼')
+            print('ä¸å­˜åœ¨è®­ç»ƒæ•°æ®ä¿å­˜ç›®å½•ï¼Œç°åœ¨åˆ›å»ºä¿å­˜ç›®å½•')
             os.makedirs(SAVER_DIR)
-        # ³õÊ¼»¯saver
-        saver = tf.train.Saver()            
-        saver_path = saver.save(sess, "%smodel.ckpt"%(SAVER_DIR))
- 
- 
- 
-if __name__ =='__main__' and sys.argv[1]=='predict':
-    saver = tf.train.import_meta_graph("%smodel.ckpt.meta"%(SAVER_DIR))
+        # åˆå§‹åŒ–saver
+        saver = tf.train.Saver()
+        saver_path = saver.save(sess, "%smodel.ckpt" % (SAVER_DIR))
+
+if __name__ == '__main__' and sys.argv[1] == 'predict':
+    saver = tf.train.import_meta_graph("%smodel.ckpt.meta" % (SAVER_DIR))
     with tf.Session() as sess:
-        model_file=tf.train.latest_checkpoint(SAVER_DIR)
+        model_file = tf.train.latest_checkpoint(SAVER_DIR)
         saver.restore(sess, model_file)
- 
-        # µÚÒ»¸ö¾í»ı²ã
+
+        # ç¬¬ä¸€ä¸ªå·ç§¯å±‚
         W_conv1 = sess.graph.get_tensor_by_name("W_conv1:0")
         b_conv1 = sess.graph.get_tensor_by_name("b_conv1:0")
         conv_strides = [1, 1, 1, 1]
         kernel_size = [1, 2, 2, 1]
         pool_strides = [1, 2, 2, 1]
         L1_pool = conv_layer(x_image, W_conv1, b_conv1, conv_strides, kernel_size, pool_strides, padding='SAME')
- 
-        # µÚ¶ş¸ö¾í»ı²ã
+
+        # ç¬¬äºŒä¸ªå·ç§¯å±‚
         W_conv2 = sess.graph.get_tensor_by_name("W_conv2:0")
         b_conv2 = sess.graph.get_tensor_by_name("b_conv2:0")
         conv_strides = [1, 1, 1, 1]
         kernel_size = [1, 1, 1, 1]
         pool_strides = [1, 1, 1, 1]
         L2_pool = conv_layer(L1_pool, W_conv2, b_conv2, conv_strides, kernel_size, pool_strides, padding='SAME')
- 
- 
-        # È«Á¬½Ó²ã
+
+        # å…¨è¿æ¥å±‚
         W_fc1 = sess.graph.get_tensor_by_name("W_fc1:0")
         b_fc1 = sess.graph.get_tensor_by_name("b_fc1:0")
-        h_pool2_flat = tf.reshape(L2_pool, [-1, 16 * 20*32])
+        h_pool2_flat = tf.reshape(L2_pool, [-1, 16 * 20 * 32])
         h_fc1 = full_connect(h_pool2_flat, W_fc1, b_fc1)
- 
- 
+
         # dropout
         keep_prob = tf.placeholder(tf.float32)
- 
+
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
- 
- 
-        # readout²ã
+
+        # readoutå±‚
         W_fc2 = sess.graph.get_tensor_by_name("W_fc2:0")
         b_fc2 = sess.graph.get_tensor_by_name("b_fc2:0")
- 
-        # ¶¨ÒåÓÅ»¯Æ÷ºÍÑµÁ·op
+
+        # å®šä¹‰ä¼˜åŒ–å™¨å’Œè®­ç»ƒop
         conv = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
- 
-        for n in range(3,8):
+
+        for n in range(3, 8):
             path = "test_images/%s.bmp" % (n)
             img = Image.open(path)
             width = img.size[0]
             height = img.size[1]
- 
-            img_data = [[0]*SIZE for i in range(1)]
+
+            img_data = [[0] * SIZE for i in range(1)]
             for h in range(0, height):
                 for w in range(0, width):
                     if img.getpixel((w, h)) < 190:
-                        img_data[0][w+h*width] = 1
+                        img_data[0][w + h * width] = 1
                     else:
-                        img_data[0][w+h*width] = 0
-            
-            result = sess.run(conv, feed_dict = {x: np.array(img_data), keep_prob: 1.0})
-            
+                        img_data[0][w + h * width] = 0
+
+            result = sess.run(conv, feed_dict={x: np.array(img_data), keep_prob: 1.0})
+
             max1 = 0
             max2 = 0
             max3 = 0
@@ -269,16 +264,18 @@ if __name__ =='__main__' and sys.argv[1]=='predict':
                     max1 = result[0][j]
                     max1_index = j
                     continue
-                if (result[0][j]>max2) and (result[0][j]<=max1):
+                if (result[0][j] > max2) and (result[0][j] <= max1):
                     max2 = result[0][j]
                     max2_index = j
                     continue
-                if (result[0][j]>max3) and (result[0][j]<=max2):
+                if (result[0][j] > max3) and (result[0][j] <= max2):
                     max3 = result[0][j]
                     max3_index = j
                     continue
-            
+
             license_num = license_num + LETTERS_DIGITS[max1_index]
-            print ("¸ÅÂÊ£º  [%s %0.2f%%]    [%s %0.2f%%]    [%s %0.2f%%]" % (LETTERS_DIGITS[max1_index],max1*100, LETTERS_DIGITS[max2_index],max2*100, LETTERS_DIGITS[max3_index],max3*100))
-            
-        print ("³µÅÆ±àºÅÊÇ: ¡¾%s¡¿" % license_num)
+            print("æ¦‚ç‡ï¼š  [%s %0.2f%%]    [%s %0.2f%%]    [%s %0.2f%%]" % (
+            LETTERS_DIGITS[max1_index], max1 * 100, LETTERS_DIGITS[max2_index], max2 * 100, LETTERS_DIGITS[max3_index],
+            max3 * 100))
+
+        print("è½¦ç‰Œç¼–å·æ˜¯: ã€%sã€‘" % license_num)

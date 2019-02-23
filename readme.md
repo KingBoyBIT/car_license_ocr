@@ -31,3 +31,4 @@ totalMemory: 8.00GiB freeMemory: 6.63GiB
 # 其他注意事项
 
 - 数据集为：`car_license_ocr.7z` ，训练和预测需解压缩
+- `license_split.py`对测试图像进行了车牌定位检测，在HSV空间下用膨胀和腐蚀确定车牌坐标，实际环境下有待提高
